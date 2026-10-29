@@ -27,22 +27,13 @@ pipeline {
             }
         }
 
-        stage('Check Docker Access') {
-            steps {
-                bat '''
-                    docker --version
-                    docker info
-                '''
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Project checks and Docker access succeeded!'
-        }
-        failure {
-            echo 'Pipeline failed. Check Console Output.'
-        }
+        
+stage('Check Docker Access') {
+    steps {
+        bat '''
+            set "PATH=C:\\Users\\prana\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;%PATH%"
+            docker --version
+            docker info
+        '''
     }
 }
