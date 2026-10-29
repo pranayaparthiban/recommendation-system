@@ -61,14 +61,11 @@ pipeline {
                         @echo off
                         set "PATH=C:\\Users\\prana\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;%PATH%"
 
-                        echo %DOCKERHUB_TOKEN% | docker login --username %DOCKERHUB_USER% --password-stdin
+                        powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$env:DOCKERHUB_TOKEN | docker login --username $env:DOCKERHUB_USER --password-stdin"
                         if errorlevel 1 exit /b 1
 
                         docker push pranayaparthiban/recommendation-system:v3
-                        if errorlevel 1 (
-                            docker logout
-                            exit /b 1
-                        )
+                        if errorlevel 1 exit /b 1
 
                         docker logout
                     '''
