@@ -36,14 +36,25 @@ pipeline {
                 '''
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                bat '''
+                    set "PATH=C:\\Users\\prana\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;%PATH%"
+                    docker build -t pranayaparthiban/recommendation-system:v3 .
+                    docker images pranayaparthiban/recommendation-system
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo 'Project checks and Docker access succeeded!'
+            echo 'Recommendation System pipeline completed successfully!'
         }
+
         failure {
-            echo 'Pipeline failed. Check Console Output.'
+            echo 'Pipeline failed. Check Console Output for the first error.'
         }
     }
 }
