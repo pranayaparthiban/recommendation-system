@@ -13,7 +13,7 @@ pipeline {
                     if not exist app.py exit /b 1
                     if not exist requirements.txt exit /b 1
                     if not exist Dockerfile exit /b 1
-                    echo All required project files are present.
+                    echo Required files are present.
                 '''
             }
         }
@@ -26,11 +26,20 @@ pipeline {
                 '''
             }
         }
+
+        stage('Check Docker Access') {
+            steps {
+                bat '''
+                    docker --version
+                    docker info
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo 'Recommendation System pipeline passed!'
+            echo 'Project checks and Docker access succeeded!'
         }
         failure {
             echo 'Pipeline failed. Check Console Output.'
