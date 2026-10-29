@@ -13,13 +13,22 @@ ITEMS = [
 
 CATEGORIES = ["Technology", "AI", "Design"]
 
+SORT_OPTIONS = {
+    "name_asc": ("Name (A-Z)", "name", False),
+    "name_desc": ("Name (Z-A)", "name", True),
+    "rating_desc": ("Rating (Highest first)", "rating", True),
+    "rating_asc": ("Rating (Lowest first)", "rating", False),
+    "price_asc": ("Price (Lowest first)", "price", False),
+    "price_desc": ("Price (Highest first)", "price", True),
+}
+
 PAGE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Recommendation System - v2</title>
+    <title>Recommendation System - v3</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,7 +40,7 @@ PAGE = """
         }
         h1 { color: #173b65; }
         .version { color: #555; }
-        .filter {
+        .controls {
             background: white;
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -40,7 +49,7 @@ PAGE = """
         }
         select, button {
             padding: 10px;
-            margin-top: 8px;
+            margin: 8px 8px 0 0;
             font-size: 15px;
         }
         button {
@@ -62,24 +71,36 @@ PAGE = """
 </head>
 <body>
     <h1>Recommendation System</h1>
-    <p class="version">Version 2 — Filter Items by Category</p>
+    <p class="version">Version 3 — Filter and Sort Results</p>
 
-    <form class="filter" method="GET" action="/">
-        <label for="category"><strong>Choose a category:</strong></label>
-        <br>
+    <form class="controls" method="GET" action="/">
+        <label for="category"><strong>Category:</strong></label><br>
         <select name="category" id="category">
             <option value="All"
-                {% if selected == "All" %}selected{% endif %}>
+                {% if selected_category == "All" %}selected{% endif %}>
                 All Categories
             </option>
             {% for category in categories %}
             <option value="{{ category }}"
-                {% if selected == category %}selected{% endif %}>
+                {% if selected_category == category %}selected{% endif %}>
                 {{ category }}
             </option>
             {% endfor %}
         </select>
-        <button type="submit">Apply Filter</button>
+
+        <br><br>
+
+        <label for="sort"><strong>Sort by:</strong></label><br>
+        <select name="sort" id="sort">
+            {% for key, option in sort_options.items() %}
+            <option value="{{ key }}"
+                {% if selected_sort == key %}selected{% endif %}>
+                {{ option[0] }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Apply</button>
     </form>
 
     <h2>Recommended Items</h2>
@@ -105,24 +126,33 @@ PAGE = """
 
 @app.route("/")
 def home():
-    selected = request.args.get("category", "All").strip()
+    selected_category = request.args.get("category", "All").strip()
+    selected_sort = request.args.get("sort", "name_asc").strip()
 
-    if selected not in ["All"] + CATEGORIES:
-        selected = "All"
+    if selected_category not in ["All"] + CATEGORIES:
+        selected_category = "All"
 
-    if selected == "All":
-        filtered_items = ITEMS
+    if selected_sort not in SORT_OPTIONS:
+        selected_sort = "name_asc"
+
+    if selected_category == "All":
+        results = list(ITEMS)
     else:
-        filtered_items = [
+        results = [
             item for item in ITEMS
-            if item["category"] == selected
+            if item["category"] == selected_category
         ]
+
+    _, sort_field, reverse = SORT_OPTIONS[selected_sort]
+    results.sort(key=lambda item: item[sort_field], reverse=reverse)
 
     return render_template_string(
         PAGE,
-        items=filtered_items,
+        items=results,
         categories=CATEGORIES,
-        selected=selected,
+        sort_options=SORT_OPTIONS,
+        selected_category=selected_category,
+        selected_sort=selected_sort,
     )
 
 
@@ -130,7 +160,7 @@ def home():
 def health():
     return {
         "application": "recommendation-system",
-        "version": "v2",
+        "version": "v3",
         "status": "healthy",
     }
 
