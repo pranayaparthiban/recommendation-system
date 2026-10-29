@@ -42,15 +42,44 @@ pipeline {
                 bat '''
                     set "PATH=C:\\Users\\prana\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;%PATH%"
                     docker build -t pranayaparthiban/recommendation-system:v3 .
+                    if errorlevel 1 exit /b 1
                     docker images pranayaparthiban/recommendation-system
                 '''
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKERHUB_USER',
+                        passwordVariable: 'DOCKERHUB_TOKEN'
+                    )
+                ]) {
+                    bat '''
+                        @echo off
+                        set "PATH=C:\\Users\\prana\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin;%PATH%"
+
+                        echo %DOCKERHUB_TOKEN% | docker login --username %DOCKERHUB_USER% --password-stdin
+                        if errorlevel 1 exit /b 1
+
+                        docker push pranayaparthiban/recommendation-system:v3
+                        if errorlevel 1 (
+                            docker logout
+                            exit /b 1
+                        )
+
+                        docker logout
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'Recommendation System pipeline completed successfully!'
+            echo 'SUCCESS: Recommendation System v3 built and pushed to Docker Hub!'
         }
 
         failure {
